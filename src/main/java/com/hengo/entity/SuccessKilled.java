@@ -7,35 +7,17 @@ import java.util.Date;
  * 2018/3/27 15:29
  */
 public class SuccessKilled {
-    /**
-     * 秒杀商品ID
-     */
+
     private long seckillId;
-    /**
-     * 用户手机号
-     */
+
     private long userPhone;
-    /**
-     * 状态标示
-     */
+
     private short state;
-    /**
-     * 创建时间
-     */
+
     private Date createTime;
 
-    /**
-     * 多对一
-     */
+    // 多对一
     private Seckill seckill;
-
-    public Seckill getSeckill() {
-        return seckill;
-    }
-
-    public void setSeckill(Seckill seckill) {
-        this.seckill = seckill;
-    }
 
     public long getSeckillId() {
         return seckillId;
@@ -69,6 +51,14 @@ public class SuccessKilled {
         this.createTime = createTime;
     }
 
+    public Seckill getSeckill() {
+        return seckill;
+    }
+
+    public void setSeckill(Seckill seckill) {
+        this.seckill = seckill;
+    }
+
     @Override
     public String toString() {
         return "SuccessKilled{" +
@@ -76,7 +66,6 @@ public class SuccessKilled {
                 ", userPhone=" + userPhone +
                 ", state=" + state +
                 ", createTime=" + createTime +
-                ", seckill=" + seckill +
                 '}';
     }
 }

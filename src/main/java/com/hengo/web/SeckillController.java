@@ -4,11 +4,10 @@ import com.hengo.dto.Exposer;
 import com.hengo.dto.SeckillExecution;
 import com.hengo.dto.SeckillResult;
 import com.hengo.entity.Seckill;
-import com.hengo.enums.SeckillStateEnum;
+import com.hengo.enums.SeckillStatEnum;
 import com.hengo.exception.RepeatKillException;
 import com.hengo.exception.SeckillCloseException;
 import com.hengo.service.SeckillService;
-import jdk.nashorn.internal.ir.RuntimeNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,10 +22,9 @@ import java.util.List;
  * Created by Hengo.
  * 2018/3/29 13:51
  */
-@Controller
-@RequestMapping("/seckill")
+@Controller//@Service @Component
+@RequestMapping("/seckill")// url:/模块/资源/{id}/细分 /seckill/list
 public class SeckillController {
-
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Autowired
@@ -34,11 +32,11 @@ public class SeckillController {
 
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     public String list(Model model) {
-        // 获取列表页
+        //获取列表页
         List<Seckill> list = seckillService.getSeckillList();
         model.addAttribute("list", list);
-        // 访问jsp页面, /WEB-INF/jsp/list.jsp
-        return "list";
+        //list.jsp + model = ModelAndView
+        return "list";// /WEB-INF/jsp/"list".jsp
     }
 
     @RequestMapping(value = "/{seckillId}/detail", method = RequestMethod.GET)
@@ -48,23 +46,18 @@ public class SeckillController {
         }
         Seckill seckill = seckillService.getById(seckillId);
         if (seckill == null) {
-            return "redirect:/seckill/list";
+            return "forward:/seckill/list";
         }
         model.addAttribute("seckill", seckill);
         return "detail";
     }
 
-    /**
-     * 输出秒杀地址
-     *
-     * @param seckillId
-     * @return
-     */
+    //ajax json
     @RequestMapping(value = "/{seckillId}/exposer",
             method = RequestMethod.POST,
             produces = {"application/json;charset=UTF-8"})
     @ResponseBody
-    public SeckillResult<Exposer> exposer(@PathVariable("seckillId") Long seckillId) {
+    public SeckillResult<Exposer> exposer(@PathVariable Long seckillId) {
         SeckillResult<Exposer> result;
         try {
             Exposer exposer = seckillService.exportSeckillUrl(seckillId);
@@ -76,46 +69,40 @@ public class SeckillController {
         return result;
     }
 
-    /**
-     * 执行秒杀
-     * @param seckillId
-     * @param userPhone
-     * @param md5
-     * @return
-     */
-    @RequestMapping(value = "/{seckillId}/{md5}/execute",
+    @RequestMapping(value = "/{seckillId}/{md5}/execution",
             method = RequestMethod.POST,
             produces = {"application/json;charset=UTF-8"})
     @ResponseBody
     public SeckillResult<SeckillExecution> execute(@PathVariable("seckillId") Long seckillId,
-                                                   @CookieValue(value = "killPhone", required = false) Long userPhone,
-                                                   @PathVariable("md5") String md5) {
-        if (userPhone == null) {
-            return new SeckillResult<SeckillExecution>(false, "用户未注册");
+                                                   @PathVariable("md5") String md5,
+                                                   @CookieValue(value = "killPhone", required = false) Long phone) {
+        //springmvc valid
+        if (phone == null) {
+            return new SeckillResult<SeckillExecution>(false, "未注册");
         }
         SeckillResult<SeckillExecution> result;
         try {
-            SeckillExecution seckillExecution = seckillService.executeSeckill(seckillId, userPhone, md5);
-            return new SeckillResult<SeckillExecution>(true, seckillExecution);
-        } catch (SeckillCloseException e) {
-            SeckillExecution seckillExecution = new SeckillExecution(seckillId, SeckillStateEnum.END);
-            return new SeckillResult<SeckillExecution>(false, seckillExecution);
+            //存储过程调用.
+            SeckillExecution execution = seckillService.executeSeckillProcedure(seckillId, phone, md5);
+            return new SeckillResult<SeckillExecution>(true,execution);
         } catch (RepeatKillException e) {
-            SeckillExecution seckillExecution = new SeckillExecution(seckillId, SeckillStateEnum.REPEAT_KILL);
-            return new SeckillResult<SeckillExecution>(false, seckillExecution);
+            SeckillExecution execution = new SeckillExecution(seckillId, SeckillStatEnum.REPEAT_KILL);
+            return new SeckillResult<SeckillExecution>(true,execution);
+        } catch (SeckillCloseException e) {
+            SeckillExecution execution = new SeckillExecution(seckillId, SeckillStatEnum.END);
+            return new SeckillResult<SeckillExecution>(true,execution);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
-            SeckillExecution seckillExecution = new SeckillExecution(seckillId, SeckillStateEnum.INNER_ERROR);
-            return new SeckillResult<SeckillExecution>(false, seckillExecution);
+            SeckillExecution execution = new SeckillExecution(seckillId, SeckillStatEnum.INNER_ERROR);
+            return new SeckillResult<SeckillExecution>(true,execution);
         }
     }
 
-    /**
-     *
-     */
-    @RequestMapping(value = "/time/now", method = RequestMethod.GET)
+    @RequestMapping(value = "/time/now",method = RequestMethod.GET)
+    @ResponseBody
     public SeckillResult<Long> time(){
         Date now = new Date();
-        return new SeckillResult(true, now.getTime());
+        return new SeckillResult(true,now.getTime());
     }
+
 }

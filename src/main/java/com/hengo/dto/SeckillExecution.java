@@ -1,7 +1,7 @@
 package com.hengo.dto;
 
 import com.hengo.entity.SuccessKilled;
-import com.hengo.enums.SeckillStateEnum;
+import com.hengo.enums.SeckillStatEnum;
 
 /**
  * 封装执行秒杀的结果
@@ -10,52 +10,46 @@ import com.hengo.enums.SeckillStateEnum;
  */
 public class SeckillExecution {
 
-    private long SeckillId;
+    private long seckillId;
 
-    /**
-     * 秒杀执行结果状态
-     */
+    //秒杀执行结果状态
     private int state;
 
-    /**
-     * 状态表示
-     */
+    //状态表示
     private String stateInfo;
 
-    /**
-     * 秒杀成功的对象
-     */
+    //秒杀成功对象
     private SuccessKilled successKilled;
 
     @Override
     public String toString() {
         return "SeckillExecution{" +
-                "SeckillId=" + SeckillId +
+                "seckillId=" + seckillId +
                 ", state=" + state +
                 ", stateInfo='" + stateInfo + '\'' +
                 ", successKilled=" + successKilled +
                 '}';
     }
 
-    public SeckillExecution(long seckillId, SeckillStateEnum stateEnum, SuccessKilled successKilled) {
-        SeckillId = seckillId;
-        this.state = stateEnum.getState();
-        this.stateInfo = stateEnum.getStateInfo();
+    public SeckillExecution(long seckillId, SeckillStatEnum statEnum, SuccessKilled successKilled) {
+        this.seckillId = seckillId;
+        this.state = statEnum.getState();
+        this.stateInfo = statEnum.getStateInfo();
         this.successKilled = successKilled;
     }
 
-    public SeckillExecution(long seckillId, SeckillStateEnum stateEnum) {
-        SeckillId = seckillId;
-        this.state = stateEnum.getState();
-        this.stateInfo = stateEnum.getStateInfo();
+    public SeckillExecution(long seckillId, SeckillStatEnum statEnum) {
+        this.seckillId = seckillId;
+        this.state = statEnum.getState();
+        this.stateInfo = statEnum.getStateInfo();
     }
 
     public long getSeckillId() {
-        return SeckillId;
+        return seckillId;
     }
 
     public void setSeckillId(long seckillId) {
-        SeckillId = seckillId;
+        this.seckillId = seckillId;
     }
 
     public int getState() {

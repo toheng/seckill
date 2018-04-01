@@ -5,6 +5,7 @@ package com.hengo.exception;
  * 2018/3/28 22:04
  */
 public class SeckillCloseException extends SeckillException {
+
     public SeckillCloseException(String message) {
         super(message);
     }

@@ -11,17 +11,17 @@ public class SeckillResult<T> {
 
     private T data;
 
-    private String errorMsg;
+    private String error;
 
-    public SeckillResult(boolean success, String errorMsg) {
-        this.success = success;
-        this.errorMsg = errorMsg;
-    }
 
     public SeckillResult(boolean success, T data) {
-
         this.success = success;
         this.data = data;
+    }
+
+    public SeckillResult(boolean success, String error) {
+        this.success = success;
+        this.error = error;
     }
 
     public boolean isSuccess() {
@@ -40,11 +40,11 @@ public class SeckillResult<T> {
         this.data = data;
     }
 
-    public String getErrorMsg() {
-        return errorMsg;
+    public String getError() {
+        return error;
     }
 
-    public void setErrorMsg(String errorMsg) {
-        this.errorMsg = errorMsg;
+    public void setError(String error) {
+        this.error = error;
     }
 }

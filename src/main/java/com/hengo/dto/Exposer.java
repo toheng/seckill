@@ -7,35 +7,35 @@ package com.hengo.dto;
  */
 public class Exposer {
 
-    /**
-     * 是否开启秒杀
-     */
+    //是否开启秒杀
     private boolean exposed;
 
-    /**
-     * MD5加密
-     */
+    //一种加密措施
     private String md5;
 
-    /**
-     * id
-     */
+    //id
     private long seckillId;
 
-    /**
-     * 系统当前时间(毫秒)
-     */
+    //系统当前时间(毫秒)
     private long now;
 
-    /**
-     * 开启时间
-     */
+    //开启时间
     private long start;
 
-    /**
-     * 结束时间
-     */
+    //结束时间
     private long end;
+
+    @Override
+    public String toString() {
+        return "Exposer{" +
+                "exposed=" + exposed +
+                ", md5='" + md5 + '\'' +
+                ", seckillId=" + seckillId +
+                ", now=" + now +
+                ", start=" + start +
+                ", end=" + end +
+                '}';
+    }
 
     public Exposer(boolean exposed, String md5, long seckillId) {
         this.exposed = exposed;
@@ -102,17 +102,5 @@ public class Exposer {
 
     public void setEnd(long end) {
         this.end = end;
-    }
-
-    @Override
-    public String toString() {
-        return "Exposer{" +
-                "exposed=" + exposed +
-                ", md5='" + md5 + '\'' +
-                ", seckillId=" + seckillId +
-                ", now=" + now +
-                ", start=" + start +
-                ", end=" + end +
-                '}';
     }
 }
