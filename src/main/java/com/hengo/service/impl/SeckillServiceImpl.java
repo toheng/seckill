@@ -138,6 +138,13 @@ public class SeckillServiceImpl implements SeckillService {
         }
     }
 
+    /**
+     * 使用存储过程的秒杀逻辑
+     * @param seckillId
+     * @param userPhone
+     * @param md5
+     * @return
+     */
     @Override
     public SeckillExecution executeSeckillProcedure(long seckillId, long userPhone, String md5) {
         if (md5 == null || !md5.equals(getMD5(seckillId))) {

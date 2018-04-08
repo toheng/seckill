@@ -29,6 +29,7 @@
         order by create_time desc
         limit #{offset},#{limit}
     </select>
+
     <!-- mybatis调用存储过程 -->
     <select id="killByProcedure" statementType="CALLABLE">
         call execute_seckill(
