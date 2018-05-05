@@ -1,5 +1,29 @@
 ## Java高并发秒杀系统API
 
+### 秒杀优化难点
+这个项目中核心就是怎么样处理可能会发生高并发的地方，比如详情页、系统时间、地址暴露接口、用户执行秒杀操作。将商品详情页放在CDN中。用Redis去优化地址暴露接口和利用Google的Protostaff序列化，可以极大的减少不必要的时间开销。用户执行秒杀操作，难点在减库存数量上和如何去高效的处理竞争。
+
+**详情页**：详情页静态化放到CDN中，这样用户在访问该页面时就不需要访问的服务器了，起到了降低服务器压力的作用。而CDN中存储的是静态化的详情页和一些静态资源（css，js等），这样我们就拿不到系统的时间来进行秒杀时段的控制，所以我们需要单独设计一个请求来获取我们服务器的系统时间。
+
+**系统时间**：不用做特别处理，因为系统new一个时间对象，然后返回给客户端，耗时几乎可以忽略不计。
+
+**秒杀地址接口分析**：不能使用CDN缓存，因为CDN适合请求不会变化的静态资源，地址暴露接口是根据秒杀单的时间来计算是否开启秒杀、是否在秒杀中、是否结束秒杀。通过服务器端的逻辑去控制秒杀地址，并且暴露地址接口频繁，不希望客户端频繁的访问数据库，所以用Redis去优化地址暴露接口。Java访问Redis的客户端，seckillId设置Redis键，秒杀的对象设置为Redis值，用Google的Protostaff实现内部序列化，比原生的序列化压缩空间和压缩速度都有很大提升，尽可能的降低网络延迟。
+
+**秒杀操作**：Update减库存操作，当开启一个事务的时候，通过主键拿到行级锁，需要返回到客户端，这期间有网络延迟或者GC操作。
+insert购买明细也会有网络延迟和GC，最后才commit/rollback事务，释放行级锁，这对于库存秒杀单来说，是一个阻塞状态。
+MySQL和Java在本地执行时速度很快，瓶颈主要出现在网络延迟和GC操作上。
+
+**简单优化**：降低行级锁持有时间，先insert购买明细，再update减库存（这时候才开始持有行级锁）。
+
+**深度优化**：将insert和update操作放在MySQL端执行存储过程。
+
+**存储过程**：
+    1. 优化的是事务行级锁持有时间。
+    2. 简单的存储过程可以使用存储过程。
+    3. 不要过度依赖存储过程。
+    4. 一个秒杀单可以达到6000/QPS。
+    最后通过Java客户端去调用存储过程。
+
 ### 使用方式
 
 - **Clone项目:** 
@@ -59,6 +83,7 @@ org.apache.ibatis.exceptions.PersistenceException:
 ### The error may exist in resources/mapper/SeckillDao.xml  
 ### Cause: org.apache.ibatis.builder.BuilderException: Error parsing SQL Mapper Configuration. Cause: java.io.IOException: Could not find resource resources/mapper/SeckillDao.xml   
 ```
+
 出现了上述问题后，主要是由于这样几个问题
 - 出现这个问题大多数都是找不到映射文件，这和没有遵循mybatis的mapper代理配置规范有关，对于我这个问题仔细看java.io.IOException:Could not find resource   
   resources/mapper下的seckillDao.xml,就是文件读写出现问题，系统找不到这个文件，需要检查，mapper接口与映射的mapper.xml 的命名是否一致，是否在同一目录下。  
@@ -86,17 +111,15 @@ List<Seckill> queryAll(@Param("offset") int offset, @Param("limit") int limit);
 
 #### 前端交互过程
 
-![前端交互设计](http://osal57kgi.bkt.clouddn.com/jiaohusheji.png)
-
+![前端交互设计](http://wx3.sinaimg.cn/mw690/006YxpfSgy1fr07e4bufwj30qm0b4t9d.jpg)
 
 #### Restful 接口设计
-
 
 #### SpringMVC 使用技巧
 
 - SpringMVC 配置和运行流程
 
-![springMVC运行过程](http://osal57kgi.bkt.clouddn.com/springMVC.png)
+![springMVC运行过程](http://wx4.sinaimg.cn/mw690/006YxpfSgy1fr07eiw0wpj30qp09sq3b.jpg)
 
 - DTO service和前端页面传递数据
 
@@ -120,26 +143,4 @@ List<Seckill> queryAll(@Param("offset") int offset, @Param("limit") int limit);
 
 #### 秒杀优化
 
-![秒杀优化](http://osal57kgi.bkt.clouddn.com/youhua.png)
-
-
-### 秒杀优化难点
-这个项目中核心就是怎么样处理可能会发生高并发的地方，比如详情页、系统时间、地址暴露接口、用户执行秒杀操作。将商品详情页放在CDN中。用Redis去优化地址暴露接口和利用Google的Protostaff序列化，可以极大的减少不必要的时间开销。用户执行秒杀操作，难点在减库存数量上和如何去高效的处理竞争。
-
-**详情页**：详情页静态化放到CDN中，这样用户在访问该页面时就不需要访问的服务器了，起到了降低服务器压力的作用。而CDN中存储的是静态化的详情页和一些静态资源（css，js等），这样我们就拿不到系统的时间来进行秒杀时段的控制，所以我们需要单独设计一个请求来获取我们服务器的系统时间。
-
-**系统时间**：不用做特别处理，因为系统new一个时间对象，然后返回给客户端，耗时几乎可以忽略不计。
-
-**秒杀地址接口分析**：不能使用CDN缓存，因为CDN适合请求不会变化的静态资源，地址暴露接口是根据秒杀单的时间来计算是否开启秒杀、是否在秒杀中、是否结束秒杀。通过服务器端的逻辑去控制秒杀地址，并且暴露地址接口频繁，不希望客户端频繁的访问数据库，所以用Redis去优化地址暴露接口。Java访问Redis的客户端，seckillId设置Redis键，秒杀的对象设置为Redis值，用Google的Protostaff实现内部序列化，比原生的序列化压缩空间和压缩速度都有很大提升，尽可能的降低网络延迟。
-
-**秒杀操作**：Update减库存操作，当开启一个事务的时候，通过主键拿到行级锁，需要返回到客户端，这期间有网络延迟或者GC操作。
-insert购买明细也会有网络延迟和GC，最后才commit/rollback事务，释放行级锁，这对于库存秒杀单来说，是一个阻塞状态。
-MySQL和Java在本地执行时速度很快，瓶颈主要出现在网络延迟和GC操作上。
-**简单优化**：降低行级锁持有时间，先insert购买明细，再update减库存（这时候才开始持有行级锁）。
-**深度优化**：将insert和update操作放在MySQL端执行存储过程。
-**存储过程**：
-    1. 优化的是事务行级锁持有时间。
-    2. 简单的存储过程可以使用存储过程。
-    3. 不要过度依赖存储过程。
-    4. 一个秒杀单可以达到6000/QPS。
-最后通过Java客户端去调用存储过程。
+![秒杀优化](http://wx1.sinaimg.cn/mw690/006YxpfSgy1fr07dy0wo3j30jb07ldfw.jpg)
