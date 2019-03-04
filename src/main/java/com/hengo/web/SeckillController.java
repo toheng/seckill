@@ -22,7 +22,7 @@ import java.util.List;
  * Created by Hengo.
  * 2018/3/29 13:51
  */
-@Controller//@Service @Component
+@Controller
 @RequestMapping("/seckill")// url:/模块/资源/{id}/细分 /seckill/list
 public class SeckillController {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -36,7 +36,7 @@ public class SeckillController {
         List<Seckill> list = seckillService.getSeckillList();
         model.addAttribute("list", list);
         //list.jsp + model = ModelAndView
-        return "list";// /WEB-INF/jsp/"list".jsp
+        return "list";// 返回路径地址：/WEB-INF/jsp/"list".jsp
     }
 
     @RequestMapping(value = "/{seckillId}/detail", method = RequestMethod.GET)
@@ -84,25 +84,25 @@ public class SeckillController {
         try {
             //存储过程调用.
             SeckillExecution execution = seckillService.executeSeckillProcedure(seckillId, phone, md5);
-            return new SeckillResult<SeckillExecution>(true,execution);
+            return new SeckillResult<SeckillExecution>(true, execution);
         } catch (RepeatKillException e) {
             SeckillExecution execution = new SeckillExecution(seckillId, SeckillStatEnum.REPEAT_KILL);
-            return new SeckillResult<SeckillExecution>(true,execution);
+            return new SeckillResult<SeckillExecution>(true, execution);
         } catch (SeckillCloseException e) {
             SeckillExecution execution = new SeckillExecution(seckillId, SeckillStatEnum.END);
-            return new SeckillResult<SeckillExecution>(true,execution);
+            return new SeckillResult<SeckillExecution>(true, execution);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
             SeckillExecution execution = new SeckillExecution(seckillId, SeckillStatEnum.INNER_ERROR);
-            return new SeckillResult<SeckillExecution>(true,execution);
+            return new SeckillResult<SeckillExecution>(true, execution);
         }
     }
 
-    @RequestMapping(value = "/time/now",method = RequestMethod.GET)
+    @RequestMapping(value = "/time/now", method = RequestMethod.GET)
     @ResponseBody
-    public SeckillResult<Long> time(){
+    public SeckillResult<Long> time() {
         Date now = new Date();
-        return new SeckillResult(true,now.getTime());
+        return new SeckillResult<>(true, now.getTime());
     }
 
 }

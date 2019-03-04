@@ -4,12 +4,12 @@ package com.hengo.enums;
  * Created by Hengo.
  * 2018/3/28 23:50
  */
-public enum  SeckillStatEnum {
-    SUCCESS(1,"秒杀成功"),
-    END(0,"秒杀结束"),
-    REPEAT_KILL(-1,"重复秒杀"),
-    INNER_ERROR(-2,"系统异常"),
-    DATA_REWRITE(-3,"数据篡改");
+public enum SeckillStatEnum {
+    SUCCESS(1, "秒杀成功"),
+    END(0, "秒杀结束"),
+    REPEAT_KILL(-1, "重复秒杀"),
+    INNER_ERROR(-2, "系统异常"),
+    DATA_REWRITE(-3, "数据篡改");
 
     private int state;
 
@@ -28,10 +28,10 @@ public enum  SeckillStatEnum {
         return stateInfo;
     }
 
-    public static SeckillStatEnum stateOf(int index) {
-        for (SeckillStatEnum state : values()) {
-            if (state.getState() == index) {
-                return state;
+    public static <T extends SeckillStatEnum> T getSeckillStatEnumByState(int state, Class<T> tClass) {
+        for (T each : tClass.getEnumConstants()) {
+            if (each.getState() == state) {
+                return each;
             }
         }
         return null;

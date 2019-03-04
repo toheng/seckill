@@ -20,10 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by Hengo.
@@ -101,7 +98,7 @@ public class SeckillServiceImpl implements SeckillService {
      * 3:不是所有的方法都需要事务,如只有一条修改操作,只读操作不需要事务控制.
      */
     public SeckillExecution executeSeckill(long seckillId, long userPhone, String md5)
-            throws SeckillException, RepeatKillException, SeckillCloseException {
+            throws SeckillException {
         if (md5 == null || !md5.equals(getMD5(seckillId))) {
             throw new SeckillException("seckill data rewrite");
         }
@@ -140,6 +137,7 @@ public class SeckillServiceImpl implements SeckillService {
 
     /**
      * 使用存储过程的秒杀逻辑
+     *
      * @param seckillId
      * @param userPhone
      * @param md5
@@ -166,7 +164,7 @@ public class SeckillServiceImpl implements SeckillService {
                         queryByIdWithSeckill(seckillId, userPhone);
                 return new SeckillExecution(seckillId, SeckillStatEnum.SUCCESS, sk);
             } else {
-                return new SeckillExecution(seckillId, SeckillStatEnum.stateOf(result));
+                return new SeckillExecution(seckillId, Objects.requireNonNull(SeckillStatEnum.getSeckillStatEnumByState(result, SeckillStatEnum.class)));
             }
         } catch (Exception e) {
             logger.error(e.getMessage(), e);

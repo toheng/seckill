@@ -3,8 +3,6 @@ package com.hengo.service;
 import com.hengo.dto.Exposer;
 import com.hengo.dto.SeckillExecution;
 import com.hengo.entity.Seckill;
-import com.hengo.exception.RepeatKillException;
-import com.hengo.exception.SeckillCloseException;
 import com.hengo.exception.SeckillException;
 
 import java.util.List;
@@ -48,7 +46,7 @@ public interface SeckillService {
      * @param md5
      */
     SeckillExecution executeSeckill(long seckillId, long userPhone, String md5)
-            throws SeckillException, RepeatKillException, SeckillCloseException;
+            throws SeckillException;
 
     /**
      * 执行秒杀操作by 存储过程
